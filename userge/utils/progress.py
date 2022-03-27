@@ -61,15 +61,25 @@ async def progress(current: int,
         progress_str = progress_str.format(
             ud_type,
             file_name,
-            ''.join((userge.config.FINISHED_PROGRESS_STR
-                     for _ in range(floor(percentage / 5)))),
-            ''.join((userge.config.UNFINISHED_PROGRESS_STR
-                     for _ in range(20 - floor(percentage / 5)))),
+            ''.join(
+                (
+                    userge.config.FINISHED_PROGRESS_STR
+                    for _ in range(floor(percentage / 5))
+                )
+            ),
+            ''.join(
+                (
+                    userge.config.UNFINISHED_PROGRESS_STR
+                    for _ in range(20 - floor(percentage / 5))
+                )
+            ),
             round(percentage, 2),
             humanbytes(current),
             humanbytes(total),
             humanbytes(speed),
-            time_to_completion if time_to_completion else "0 s")
+            time_to_completion or "0 s",
+        )
+
         try:
             await message.edit(progress_str)
         except FloodWait as f_e:

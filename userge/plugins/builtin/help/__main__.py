@@ -323,11 +323,9 @@ if userge.has_bot:
                 "⬅ Back", callback_data=f"back({cur_pos})".encode()))
 
             if len(cur_pos.split('|')) > 2:
-                tmp_btns.append(InlineKeyboardButton(
-                    "🖥 Main Menu", callback_data="mm".encode()))
-                tmp_btns.append(InlineKeyboardButton(
-                    "🔄 Refresh", callback_data=f"refresh({cur_pos})".encode()))
-
+                tmp_btns.extend((InlineKeyboardButton(
+                    "🖥 Main Menu", callback_data="mm".encode()), InlineKeyboardButton(
+                    "🔄 Refresh", callback_data=f"refresh({cur_pos})".encode())))
         elif userge.dual_mode:
             cur_clnt = "👲 USER" if config.Dynamic.USER_IS_PREFERRED else "🤖 BOT"
             tmp_btns.append(InlineKeyboardButton(

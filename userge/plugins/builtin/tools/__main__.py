@@ -99,8 +99,7 @@ async def cancel_(message: Message):
             await message.err("nothing found to cancel", show_help=False)
         return
 
-    replied = message.reply_to_message  # type: Message
-    if replied:
+    if replied := message.reply_to_message:
         if not replied._call_cancel_callbacks():  # pylint: disable=protected-access
             await message.err("nothing found to cancel", show_help=False)
     else:
@@ -142,11 +141,10 @@ async def search(message: Message):
     plugins = '-p' in message.flags
     data = list(userge.manager.loaded_plugins if plugins else userge.manager.loaded_commands)
 
-    found = [i for i in sorted(data) if key in i]
-    out_str = '    '.join(found)
-
-    if found:
+    if found := [i for i in sorted(data) if key in i]:
         out = f"**--found {len(found)} {'plugin' if plugins else 'command'}(s) for-- : `{key}`**"
+        out_str = '    '.join(found)
+
         out += f"\n\n`{out_str}`"
     else:
         out = f"__nothing found for__ : `{key}`"
