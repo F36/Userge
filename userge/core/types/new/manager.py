@@ -123,10 +123,11 @@ class Manager:
         """ load list of commands """
         loaded: List[str] = []
 
-        for cmd_name in set(commands).intersection(set(self.commands)):
-            ret = self.commands[cmd_name].load()
-            if ret:
-                loaded.append(ret)
+        loaded.extend(
+            ret
+            for cmd_name in set(commands).intersection(set(self.commands))
+            if (ret := self.commands[cmd_name].load())
+        )
 
         if loaded:
             await _load(loaded)
@@ -138,10 +139,11 @@ class Manager:
         """ unload list of commands """
         unloaded: List[str] = []
 
-        for cmd_name in set(commands).intersection(set(self.commands)):
-            ret = self.commands[cmd_name].unload()
-            if ret:
-                unloaded.append(ret)
+        unloaded.extend(
+            ret
+            for cmd_name in set(commands).intersection(set(self.commands))
+            if (ret := self.commands[cmd_name].unload())
+        )
 
         if unloaded:
             await _unload(unloaded)
@@ -153,10 +155,11 @@ class Manager:
         """ load list of filters """
         loaded: List[str] = []
 
-        for flt_name in set(filters).intersection(set(self.filters)):
-            ret = self.filters[flt_name].load()
-            if ret:
-                loaded.append(ret)
+        loaded.extend(
+            ret
+            for flt_name in set(filters).intersection(set(self.filters))
+            if (ret := self.filters[flt_name].load())
+        )
 
         if loaded:
             await _load(loaded)
@@ -168,10 +171,11 @@ class Manager:
         """ unload list of filters """
         unloaded: List[str] = []
 
-        for flt_name in set(filters).intersection(set(self.filters)):
-            ret = self.filters[flt_name].unload()
-            if ret:
-                unloaded.append(ret)
+        unloaded.extend(
+            ret
+            for flt_name in set(filters).intersection(set(self.filters))
+            if (ret := self.filters[flt_name].unload())
+        )
 
         if unloaded:
             await _unload(unloaded)
@@ -186,10 +190,9 @@ class Manager:
         for plg_name in set(plugins).intersection(set(self.plugins)):
             ret = await self.plugins[plg_name].load()
             if ret:
-                loaded.update({plg_name: ret})
+                loaded[plg_name] = ret
 
-        to_save = [_ for _ in loaded.values() for _ in _]
-        if to_save:
+        if to_save := [_ for _ in loaded.values() for _ in _]:
             await _load(to_save)
 
         return loaded
@@ -201,10 +204,9 @@ class Manager:
         for plg_name in set(plugins).intersection(set(self.plugins)):
             ret = await self.plugins[plg_name].unload()
             if ret:
-                unloaded.update({plg_name: ret})
+                unloaded[plg_name] = ret
 
-        to_save = [_ for _ in unloaded.values() for _ in _]
-        if to_save:
+        if to_save := [_ for _ in unloaded.values() for _ in _]:
             await _unload(to_save)
 
         return unloaded
@@ -250,10 +252,11 @@ class Manager:
             except StopIteration:
                 break
 
-            tasks = []
+            tasks = [
+                (plg, loop.create_task(getattr(plg, meth)()))
+                for plg in chain((plg,), chunk)
+            ]
 
-            for plg in chain((plg,), chunk):
-                tasks.append((plg, loop.create_task(getattr(plg, meth)())))
 
             for plg, task in tasks:
                 try:

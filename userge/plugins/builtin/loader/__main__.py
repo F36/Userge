@@ -328,10 +328,11 @@ async def consts(message: Message):
         await message.edit("```no constraints found```", del_in=3)
         return
 
-    out = ""
+    out = "".join(
+        f"type: `{const.type}`\ndata: `{'`, `'.join(const.data)}`\n\n"
+        for const in data_
+    )
 
-    for const in data_:
-        out += f"type: `{const.type}`\ndata: `{'`, `'.join(const.data)}`\n\n"
 
     await message.edit_or_send_as_file(out, del_in=0)
 

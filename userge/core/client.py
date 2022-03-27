@@ -73,7 +73,7 @@ class _Module:
         return self._init
 
     def main(self) -> Optional[ModuleType]:
-        self._main = _import_module(self._path + ".__main__")
+        self._main = _import_module(f'{self._path}.__main__')
 
         return self._main
 
@@ -134,18 +134,12 @@ class _AbstractUserge(Methods, RawClient):
     @property
     def id(self) -> int:
         """ returns client id """
-        if self.is_bot:
-            return RawClient.BOT_ID
-
-        return RawClient.USER_ID
+        return RawClient.BOT_ID if self.is_bot else RawClient.USER_ID
 
     @property
     def is_bot(self) -> bool:
         """ returns client is bot or not """
-        if self._bot is not None:
-            return hasattr(self, 'ubot')
-
-        return bool(config.BOT_TOKEN)
+        return bool(config.BOT_TOKEN) if self._bot is None else hasattr(self, 'ubot')
 
     @property
     def uptime(self) -> str:
@@ -169,8 +163,7 @@ class _AbstractUserge(Methods, RawClient):
                     continue
 
                 mdl = _Module(cat, plg)
-                mt = mdl.init()
-                if mt:
+                if mt := mdl.init():
                     _MODULES.append(mdl)
                     self.manager.update_plugin(mt.__name__, mt.__doc__)
 
@@ -193,8 +186,7 @@ class _AbstractUserge(Methods, RawClient):
         reloaded: List[_Module] = []
 
         for mdl in _MODULES:
-            mt = mdl.reload_init()
-            if mt:
+            if mt := mdl.reload_init():
                 reloaded.append(mdl)
                 self.manager.update_plugin(mt.__name__, mt.__doc__)
 

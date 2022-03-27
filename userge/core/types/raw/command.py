@@ -45,10 +45,8 @@ class Command(Filter):
         if _has_regex(command):
             if name:
                 name = trigger + name
-            else:
-                match = re.match("(\\w[\\w_]*)", command)
-                if match:
-                    name = trigger + match.groups()[0]
+            elif match := re.match("(\\w[\\w_]*)", command):
+                name = trigger + match.groups()[0]
         else:
             if not name:
                 name = trigger + command
@@ -85,10 +83,13 @@ def _public_flt(trigger: str, name: str) -> filters.Filter:
 def _build_filter(logic: Callable[[Message, str, str], bool],
                   trigger: str, name: str) -> filters.Filter:
     return filters.create(
-        lambda _, __, m:
-        m.via_bot is None and not m.scheduled
-        and not (m.forward_from or m.forward_sender_name)
-        and m.text and not m.edit_date and logic(m, trigger, name)
+        lambda _, __, m: m.via_bot is None
+        and not m.scheduled
+        and not m.forward_from
+        and not m.forward_sender_name
+        and m.text
+        and not m.edit_date
+        and logic(m, trigger, name)
     )
 
 
@@ -115,15 +116,11 @@ def _incoming_logic(m: Message, trigger: str, name: str) -> bool:
 
 
 def _public_logic(m: Message, trigger: str, _) -> bool:
-    return (
-        True
-        if not trigger
-        else m.text.startswith(config.CMD_TRIGGER)
+    return (m.text.startswith(config.CMD_TRIGGER)
         if m.from_user and m.from_user.id in config.OWNER_ID
         else m.text.startswith(config.SUDO_TRIGGER)
         if sudo.Dynamic.ENABLED and m.from_user and m.from_user.id in sudo.USERS
-        else m.text.startswith(trigger)
-    )
+        else m.text.startswith(trigger)) if trigger else True
 
 
 def _format_about(about: Union[str, Dict[str, Union[str, List[str], Dict[str, str]]]]) -> str:

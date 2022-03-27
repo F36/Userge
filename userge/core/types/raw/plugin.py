@@ -72,11 +72,7 @@ class Plugin:
 
     def add(self, obj: Union['command.Command', '_filter.Filter']) -> None:
         """ add command or filter to plugin """
-        if isinstance(obj, command.Command):
-            type_ = self.commands
-        else:
-            type_ = self.filters
-
+        type_ = self.commands if isinstance(obj, command.Command) else self.filters
         for flt in type_:
             if flt.name == obj.name:
                 type_.remove(flt)
@@ -122,9 +118,8 @@ class Plugin:
         if self.loaded:
             if self._state == _UNLOADED:
                 await self._start()
-        else:
-            if self._state == _LOADED:
-                await self._stop()
+        elif self._state == _LOADED:
+            await self._stop()
 
     def clear(self) -> None:
         if self._state == _LOADED:
@@ -181,10 +176,11 @@ class Plugin:
 def _do_it(plg: Plugin, work_type: str) -> List[str]:
     done: List[str] = []
 
-    for flt in plg.commands + plg.filters:
-        tmp = getattr(flt, work_type)()
-        if tmp:
-            done.append(tmp)
+    done.extend(
+        tmp
+        for flt in plg.commands + plg.filters
+        if (tmp := getattr(flt, work_type)())
+    )
 
     if done:
         _LOG.info(f"{work_type.rstrip('e')}ed {plg}")

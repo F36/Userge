@@ -50,9 +50,7 @@ async def _update_u_cht(r_m: RawMessage) -> Optional[ChatMember]:
             user = await r_m.chat.get_member(RawClient.USER_ID)
         except UserNotParticipant:
             return None
-        user.can_all = None
-        if user.status == "creator":
-            user.can_all = True
+        user.can_all = True if user.status == "creator" else None
         if user.status in ("creator", "administrator"):
             _U_AD_CHT[r_m.chat.id] = user
         else:
@@ -147,24 +145,25 @@ async def _bot_is_present(r_c: Union['_client.Userge', '_client.UsergeBot'],
     if is_bot:
         if r_m.chat.id not in _B_CMN_CHT:
             _B_CMN_CHT.append(r_m.chat.id)
-    else:
-        if round(time.time() - _TASK_2_START_TO) > 10:
-            try:
-                chats = await r_c.get_common_chats(RawClient.BOT_ID)
-                _B_CMN_CHT.clear()
-                for chat in chats:
-                    _B_CMN_CHT.append(chat.id)
-            except PeerIdInvalid:
-                pass
-            _TASK_2_START_TO = time.time()
+    elif round(time.time() - _TASK_2_START_TO) > 10:
+        try:
+            chats = await r_c.get_common_chats(RawClient.BOT_ID)
+            _B_CMN_CHT.clear()
+            for chat in chats:
+                _B_CMN_CHT.append(chat.id)
+        except PeerIdInvalid:
+            pass
+        _TASK_2_START_TO = time.time()
     return r_m.chat.id in _B_CMN_CHT
 
 
 async def _both_are_admins(r_c: Union['_client.Userge', '_client.UsergeBot'],
                            r_m: RawMessage, is_bot: bool) -> bool:
-    if not await _bot_is_present(r_c, r_m, is_bot):
-        return False
-    return r_m.chat.id in _B_AD_CHT and r_m.chat.id in _U_AD_CHT
+    return (
+        r_m.chat.id in _B_AD_CHT and r_m.chat.id in _U_AD_CHT
+        if await _bot_is_present(r_c, r_m, is_bot)
+        else False
+    )
 
 
 async def _both_have_perm(flt: Union['types.raw.Command', 'types.raw.Filter'],
